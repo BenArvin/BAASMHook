@@ -326,15 +326,43 @@ static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr
     }
 }
 
-void check_cmd(SEL _cmd, int index) {
+void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
+    thread_call_stack *cs = get_thread_call_stack();
+    thread_call_record *record = &cs->stack[index];
+    
     const char *name = sel_getName(_cmd);
     if (strcmp(name, "testParamFunc:") == 0) {
-        thread_call_stack *cs = get_thread_call_stack();
-        if (cs) {
-            thread_call_record *record = &cs->stack[index];
-            record->reg_2 = 987654321;
-        }
+        record->reg_2 = 987654321;
     }
+    
+    uint64_t reg_tmp_19;
+    uint64_t reg_tmp_20;
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
+
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&record->reg_0));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&record->reg_1));
+    __asm volatile("stp x19, x20, [sp, 160]\n");
+    
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&record->reg_2));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&record->reg_3));
+    __asm volatile("stp x19, x20, [sp, 176]\n");
+    
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&record->reg_4));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&record->reg_5));
+    __asm volatile("stp x19, x20, [sp, 192]\n");
+    
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&record->reg_6));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&record->reg_7));
+    __asm volatile("stp x19, x20, [sp, 208]\n");
+    
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&record->reg_8));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&record->reg_9));
+    __asm volatile("stp x19, x20, [sp, 224]\n");
+
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+    printf("");
 }
 
 static inline uintptr_t pop_call_record() {
@@ -358,7 +386,7 @@ void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
     
     int index;
     push_call_record(self, object_getClass(self), _cmd, lr, reg_sp, &index);
-    check_cmd(_cmd, index);
+    reset_params(_cmd, index, reg_sp);
 }
 
 uintptr_t after_objc_msgSend() {
