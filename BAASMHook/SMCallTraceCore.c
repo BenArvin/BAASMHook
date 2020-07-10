@@ -362,7 +362,6 @@ void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
 
     __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
     __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
-    printf("");
 }
 
 static inline uintptr_t pop_call_record() {
