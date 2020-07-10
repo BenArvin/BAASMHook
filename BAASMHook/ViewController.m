@@ -58,6 +58,9 @@
     [super testParamFunc:intValue];
 }
 
+- (void)testParamFunc:(NSInteger)intValue1 intValue2:(NSInteger)intValue2 intValue3:(NSInteger)intValue3 intValue4:(NSInteger)intValue4 intValue5:(NSInteger)intValue5 intValue6:(NSInteger)intValue6 intValue7:(NSInteger)intValue7 intValue8:(NSInteger)intValue8 intValue9:(NSInteger)intValue9 intValue10:(NSInteger)intValue10 {
+}
+
 @end
 
 @interface ViewController ()
@@ -71,8 +74,13 @@
     
     TestSonSonCalss *sonSon = [[TestSonSonCalss alloc] init];
     [sonSon testFunc];
-    [sonSon testParamFunc:789];
+//    [sonSon testParamFunc:123 intValue2:234 intValue3:345 intValue4:456 intValue5:567 intValue6:678 intValue7:789 intValue8:1234 intValue9:2345 intValue10:3456];
+    [sonSon testParamFunc:123456789];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.view.backgroundColor = [UIColor whiteColor];
+}
 
 @end

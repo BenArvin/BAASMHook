@@ -227,29 +227,8 @@ static int fish_rebind_symbols(struct rebinding rebindings[], size_t rebindings_
 #include <dispatch/dispatch.h>
 #include <pthread.h>
 
-static uint64_t _min_time_cost = 1000; //us
-static int _max_call_depth = 3;
 static pthread_key_t _thread_key;
 __unused static id (*orig_objc_msgSend)(id, SEL, ...);
-
-static uint64_t _register_0;
-static uint64_t _register_1;
-static uint64_t _register_2;
-static uint64_t _register_3;
-static uint64_t _register_4;
-static uint64_t _register_5;
-static uint64_t _register_6;
-static uint64_t _register_7;
-static uint64_t _register_8;
-static uint64_t _register_9;
-static uint64_t _register_10;
-static uint64_t _register_11;
-
-static smCallRecord *_smCallRecords;
-//static int otp_record_num;
-//static int otp_record_alloc;
-static int _smRecordNum;
-static int _smRecordAlloc;
 
 typedef struct {
     id self; //通过 object_getClass 能够得到 Class 再通过 NSStringFromClass 能够得到类名
@@ -257,6 +236,18 @@ typedef struct {
     SEL cmd; //通过 NSStringFromSelector 方法能够得到方法名
     uint64_t time; //us
     uintptr_t lr; // link register
+    uint64_t reg_0;
+    uint64_t reg_1;
+    uint64_t reg_2;
+    uint64_t reg_3;
+    uint64_t reg_4;
+    uint64_t reg_5;
+    uint64_t reg_6;
+    uint64_t reg_7;
+    uint64_t reg_8;
+    uint64_t reg_9;
+//    uint64_t register_19;
+//    uint64_t register_20;
 } thread_call_record;
 
 typedef struct {
@@ -286,7 +277,7 @@ static void release_thread_call_stack(void *ptr) {
     free(cs);
 }
 
-static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr) {
+static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr, uint64_t reg_sp, int *index) {
     thread_call_stack *cs = get_thread_call_stack();
     if (cs) {
         int nextIndex = (++cs->index);
@@ -294,105 +285,81 @@ static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr
             cs->allocated_length += 64;
             cs->stack = (thread_call_record *)realloc(cs->stack, cs->allocated_length * sizeof(thread_call_record));
         }
+        *index = nextIndex;
         thread_call_record *newRecord = &cs->stack[nextIndex];
         newRecord->self = _self;
         newRecord->cls = _cls;
         newRecord->cmd = _cmd;
         newRecord->lr = lr;
-//        if (cs->is_main_thread && _call_record_enabled) {
-//            struct timeval now;
-//            gettimeofday(&now, NULL);
-//            newRecord->time = (now.tv_sec % 100) * 1000000 + now.tv_usec;
-//        }
+        
+//        uint64_t current_reg_sp;
+        uint64_t reg_tmp_19;
+        uint64_t reg_tmp_20;
+
+//        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->register_19));
+//        __asm volatile("mov x19, sp");
+//        __asm volatile("str x19, [%0]\n" :: "r"(&current_reg_sp));
+//        __asm volatile("ldr x19, [%0]\n" :: "r"(&newRecord->register_19));
+
+//        uint64_t spSub = reg_sp - current_reg_sp;
+        __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
+        __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
+
+        __asm volatile("ldp x19, x20, [sp, 192]\n");
+        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->reg_0));
+        __asm volatile("str x20, [%0]\n" :: "r"(&newRecord->reg_1));
+        __asm volatile("ldp x19, x20, [sp, 208]\n");
+        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->reg_2));
+        __asm volatile("str x20, [%0]\n" :: "r"(&newRecord->reg_3));
+        __asm volatile("ldp x19, x20, [sp, 224]\n");
+        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->reg_4));
+        __asm volatile("str x20, [%0]\n" :: "r"(&newRecord->reg_5));
+        __asm volatile("ldp x19, x20, [sp, 240]\n");
+        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->reg_6));
+        __asm volatile("str x20, [%0]\n" :: "r"(&newRecord->reg_7));
+        __asm volatile("ldp x19, x20, [sp, 256]\n");
+        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->reg_8));
+        __asm volatile("str x20, [%0]\n" :: "r"(&newRecord->reg_9));
+
+        __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
+        __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+    }
+}
+
+void check_cmd(SEL _cmd, int index) {
+    const char *name = sel_getName(_cmd);
+    if (strcmp(name, "testParamFunc:") == 0) {
+        thread_call_stack *cs = get_thread_call_stack();
+        if (cs) {
+            thread_call_record *record = &cs->stack[index];
+            record->reg_2 = 987654321;
+        }
     }
 }
 
 static inline uintptr_t pop_call_record() {
     thread_call_stack *cs = get_thread_call_stack();
-//    int curIndex = cs->index;
     int nextIndex = cs->index--;
     thread_call_record *pRecord = &cs->stack[nextIndex];
-    
-//    if (cs->is_main_thread && _call_record_enabled) {
-//        struct timeval now;
-//        gettimeofday(&now, NULL);
-//        uint64_t time = (now.tv_sec % 100) * 1000000 + now.tv_usec;
-//        if (time < pRecord->time) {
-//            time += 100 * 1000000;
-//        }
-//        uint64_t cost = time - pRecord->time;
-//        if (cost > _min_time_cost && cs->index < _max_call_depth) {
-//            if (!_smCallRecords) {
-//                _smRecordAlloc = 1024;
-//                _smCallRecords = malloc(sizeof(smCallRecord) * _smRecordAlloc);
-//            }
-//            _smRecordNum++;
-//            if (_smRecordNum >= _smRecordAlloc) {
-//                _smRecordAlloc += 1024;
-//                _smCallRecords = realloc(_smCallRecords, sizeof(smCallRecord) * _smRecordAlloc);
-//            }
-//            smCallRecord *log = &_smCallRecords[_smRecordNum - 1];
-//            log->cls = pRecord->cls;
-//            log->depth = curIndex;
-//            log->sel = pRecord->cmd;
-//            log->time = cost;
-//        }
-//    }
     return pRecord->lr;
 }
 
-#define read_params_from_stack() \
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_10));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_11));\
-    __asm volatile("ldp x10, x11, [sp], #16\n");\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_0));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_1));\
-    __asm volatile("ldp x10, x11, [sp], #16\n");\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_2));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_3));\
-    __asm volatile("ldp x10, x11, [sp], #16\n");\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_4));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_5));\
-    __asm volatile("ldp x10, x11, [sp], #16\n");\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_6));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_7));\
-    __asm volatile("ldp x10, x11, [sp], #16\n");\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_8));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_9));\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_10));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_11));
-
-#define set_params_into_stack()\
-    __asm volatile("str x10, [%0]\n" :: "r"(&_register_10));\
-    __asm volatile("str x11, [%0]\n" :: "r"(&_register_11));\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_8));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_9));\
-    __asm volatile("stp x10, x11, [sp, #-16]!\n");\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_6));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_7));\
-    __asm volatile("stp x10, x11, [sp, #-16]!\n");\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_4));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_5));\
-    __asm volatile("stp x10, x11, [sp, #-16]!\n");\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_2));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_3));\
-    __asm volatile("stp x10, x11, [sp, #-16]!\n");\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_0));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_1));\
-    __asm volatile("stp x10, x11, [sp, #-16]!\n");\
-    __asm volatile("ldr x10, [%0]\n" :: "r"(&_register_10));\
-    __asm volatile("ldr x11, [%0]\n" :: "r"(&_register_11));
-
 void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
-    //sp = sp - 240
-    push_call_record(self, object_getClass(self), _cmd, lr);
-    read_params_from_stack()
-    set_params_into_stack()
-    printf("**************\n0: %d\n1: %d\n2: %d\n3: %d\n4: %d\n5: %d\n6: %d\n7: %d\n8: %d\n9: %d\n10: %d\n11: %d\n", _register_0, _register_1, _register_2, _register_3, _register_4, _register_5, _register_6, _register_7, _register_8, _register_9, _register_10, _register_11);
+    uint64_t reg_sp;
+    uint64_t reg19;
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg19));
+    __asm volatile("mov x19, sp");
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_sp));
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg19));
+    
+    //sp相差160，除去主动入栈的10个寄存器，剩下的就是函数调用时入栈的
+    //PC、LR、SP、FP，加上自身参数3个self、_cmd、lr，两个内部变量reg_sp、reg19，共10个寄存器
+    reg_sp = reg_sp + 80;
+    
+    int index;
+    push_call_record(self, object_getClass(self), _cmd, lr, reg_sp, &index);
+    check_cmd(_cmd, index);
 }
-
-//void after_objc_msgSend() {
-//}
 
 uintptr_t after_objc_msgSend() {
     return pop_call_record(); // 把lr当作返回值，放进x0寄存器
@@ -491,27 +458,27 @@ void smCallTraceStart() {
     });
 }
 
-void smCallConfigMinTime(uint64_t us) {
-    _min_time_cost = us;
-}
-void smCallConfigMaxDepth(int depth) {
-    _max_call_depth = depth;
-}
+//void smCallConfigMinTime(uint64_t us) {
+//    _min_time_cost = us;
+//}
+//void smCallConfigMaxDepth(int depth) {
+//    _max_call_depth = depth;
+//}
 
-smCallRecord *smGetCallRecords(int *num) {
-    if (num) {
-        *num = _smRecordNum;
-    }
-    return _smCallRecords;
-}
-
-void smClearCallRecords() {
-    if (_smCallRecords) {
-        free(_smCallRecords);
-        _smCallRecords = NULL;
-    }
-    _smRecordNum = 0;
-}
+//smCallRecord *smGetCallRecords(int *num) {
+//    if (num) {
+//        *num = _smRecordNum;
+//    }
+//    return _smCallRecords;
+//}
+//
+//void smClearCallRecords() {
+//    if (_smCallRecords) {
+//        free(_smCallRecords);
+//        _smCallRecords = NULL;
+//    }
+//    _smRecordNum = 0;
+//}
 
 #else
 

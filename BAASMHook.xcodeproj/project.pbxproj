@@ -17,6 +17,7 @@
 		E4EEF2F124AF289A00CBEEBD /* BAASMHookTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2F024AF289A00CBEEBD /* BAASMHookTests.m */; };
 		E4EEF2FC24AF289A00CBEEBD /* BAASMHookUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2FB24AF289A00CBEEBD /* BAASMHookUITests.m */; };
 		E4EEF30B24AF28EE00CBEEBD /* SMCallTraceCore.c in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF30A24AF28EE00CBEEBD /* SMCallTraceCore.c */; };
+		E4F0FD0F24B6C7DA00945ECB /* TestARM.c in Sources */ = {isa = PBXBuildFile; fileRef = E4F0FD0E24B6C7DA00945ECB /* TestARM.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,8 @@
 		E4EEF2FD24AF289A00CBEEBD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E4EEF30924AF28EE00CBEEBD /* SMCallTraceCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SMCallTraceCore.h; sourceTree = "<group>"; };
 		E4EEF30A24AF28EE00CBEEBD /* SMCallTraceCore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SMCallTraceCore.c; sourceTree = "<group>"; };
+		E4F0FD0E24B6C7DA00945ECB /* TestARM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = TestARM.c; sourceTree = "<group>"; };
+		E4F0FD2624B753C600945ECB /* TestARM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestARM.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +118,8 @@
 				E4EEF2D824AF289700CBEEBD /* SceneDelegate.m */,
 				E4EEF2DA24AF289700CBEEBD /* ViewController.h */,
 				E4EEF2DB24AF289700CBEEBD /* ViewController.m */,
+				E4F0FD2624B753C600945ECB /* TestARM.h */,
+				E4F0FD0E24B6C7DA00945ECB /* TestARM.c */,
 				E4EEF2DD24AF289700CBEEBD /* Main.storyboard */,
 				E4EEF2E024AF289A00CBEEBD /* Assets.xcassets */,
 				E4EEF2E224AF289A00CBEEBD /* LaunchScreen.storyboard */,
@@ -272,6 +277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4F0FD0F24B6C7DA00945ECB /* TestARM.c in Sources */,
 				E4EEF2DC24AF289700CBEEBD /* ViewController.m in Sources */,
 				E4EEF2D624AF289700CBEEBD /* AppDelegate.m in Sources */,
 				E4EEF2E724AF289A00CBEEBD /* main.m in Sources */,
