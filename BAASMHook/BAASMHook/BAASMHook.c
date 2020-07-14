@@ -14,12 +14,6 @@
 #import "fishhook.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <objc/message.h>
 #include <objc/runtime.h>
 #include <dispatch/dispatch.h>
 #include <pthread.h>
@@ -31,7 +25,6 @@ typedef struct {
     id self; //通过 object_getClass 能够得到 Class 再通过 NSStringFromClass 能够得到类名
     Class cls;
     SEL cmd; //通过 NSStringFromSelector 方法能够得到方法名
-    uint64_t time; //us
     uintptr_t lr; // link register
     uint64_t reg_0;
     uint64_t reg_0_rt;
@@ -51,7 +44,6 @@ typedef struct {
     thread_call_record *stack;
     int allocated_length;
     int index;
-    bool is_main_thread;
 } thread_call_stack;
 
 static inline thread_call_stack * get_thread_call_stack() {
@@ -61,7 +53,6 @@ static inline thread_call_stack * get_thread_call_stack() {
         cs->stack = (thread_call_record *)calloc(128, sizeof(thread_call_record));
         cs->allocated_length = 64;
         cs->index = -1;
-        cs->is_main_thread = pthread_main_np();
         pthread_setspecific(_thread_key, cs);
     }
     return cs;
@@ -216,6 +207,8 @@ uintptr_t after_objc_msgSend() {
 // https://blog.nelhage.com/2010/10/amd64-and-va_arg/
 // http://infocenter.arm.com/help/topic/com.arm.doc.ihi0055b/IHI0055B_aapcs64.pdf
 // https://developer.apple.com/library/ios/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARM64FunctionCallingConventions.html
+// https://github.com/ming1016/GCDFetchFeed/tree/master/GCDFetchFeed/GCDFetchFeed/Lib/SMLagMonitor/SMCallTraceCore.c
+
 // x0-x7: 函数参数，x0存储函数返回值
 // x8: 间接结果寄存器，用于保存子程序返回地址
 // x9-x15: 调用者临时存储用
