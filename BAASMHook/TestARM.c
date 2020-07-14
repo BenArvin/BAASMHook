@@ -22,7 +22,8 @@ void readStack() {
     uint64_t value2;
     uint64_t reg10;
     uint64_t reg11;
-    
+
+#ifdef __aarch64__
     // 先把x10、x11寄存器的值暂存起来
     __asm volatile("str x10, [%0]\n" :: "r"(&reg10));
     __asm volatile("str x11, [%0]\n" :: "r"(&reg11));
@@ -38,4 +39,6 @@ void readStack() {
 
     __asm volatile("ldr x10, [%0]\n" :: "r"(&reg10));
     __asm volatile("ldr x11, [%0]\n" :: "r"(&reg11));
+#endif
+
 }

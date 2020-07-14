@@ -7,7 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "SMCallTraceCore.h"
+#import "BAASMHook.h"
 #import "TestARM.h"
 
 @interface AppDelegate ()
@@ -20,7 +20,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
 //    readStack();
-    smCallTraceStart();
+    startAsmHook();
     return YES;
 }
 
