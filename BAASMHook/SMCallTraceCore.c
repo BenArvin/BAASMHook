@@ -237,7 +237,9 @@ typedef struct {
     uint64_t time; //us
     uintptr_t lr; // link register
     uint64_t reg_0;
+    uint64_t reg_0_rt;
     uint64_t reg_1;
+    uint64_t reg_1_rt;
     uint64_t reg_2;
     uint64_t reg_3;
     uint64_t reg_4;
@@ -246,8 +248,6 @@ typedef struct {
     uint64_t reg_7;
     uint64_t reg_8;
     uint64_t reg_9;
-//    uint64_t register_19;
-//    uint64_t register_20;
 } thread_call_record;
 
 typedef struct {
@@ -292,16 +292,9 @@ static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr
         newRecord->cmd = _cmd;
         newRecord->lr = lr;
         
-//        uint64_t current_reg_sp;
         uint64_t reg_tmp_19;
         uint64_t reg_tmp_20;
 
-//        __asm volatile("str x19, [%0]\n" :: "r"(&newRecord->register_19));
-//        __asm volatile("mov x19, sp");
-//        __asm volatile("str x19, [%0]\n" :: "r"(&current_reg_sp));
-//        __asm volatile("ldr x19, [%0]\n" :: "r"(&newRecord->register_19));
-
-//        uint64_t spSub = reg_sp - current_reg_sp;
         __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
         __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
 
@@ -333,6 +326,8 @@ void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
     const char *name = sel_getName(_cmd);
     if (strcmp(name, "testParamFunc:") == 0) {
         record->reg_2 = 987654321;
+    } else if (strcmp(name, "testAdd:") == 0) {
+        record->reg_2 = 888880;
     }
     
     uint64_t reg_tmp_19;
@@ -364,7 +359,7 @@ void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
     __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
 }
 
-static inline uintptr_t pop_call_record() {
+static inline uintptr_t pop_call_record(uint64_t reg_sp, int *index) {
     thread_call_stack *cs = get_thread_call_stack();
     int nextIndex = cs->index--;
     thread_call_record *pRecord = &cs->stack[nextIndex];
@@ -389,7 +384,42 @@ void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
 }
 
 uintptr_t after_objc_msgSend() {
-    return pop_call_record(); // 把lr当作返回值，放进x0寄存器
+    uint64_t reg_sp;
+    uint64_t reg19;
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg19));
+    __asm volatile("mov x19, sp");
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_sp));
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg19));
+    reg_sp = reg_sp + 80;
+    
+    thread_call_stack *cs = get_thread_call_stack();
+    int nextIndex = cs->index--;
+    thread_call_record *pRecord = &cs->stack[nextIndex];
+    
+    uint64_t reg_tmp_19;
+    uint64_t reg_tmp_20;
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
+    __asm volatile("ldp x19, x20, [sp, 80]\n");
+    __asm volatile("str x19, [%0]\n" :: "r"(&pRecord->reg_0_rt));
+    __asm volatile("str x20, [%0]\n" :: "r"(&pRecord->reg_1_rt));
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+
+    const char *name = sel_getName(pRecord->cmd);
+    if (strcmp(name, "testAdd:") == 0) {
+        pRecord->reg_0_rt = 99999999;
+    }
+
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&pRecord->reg_0_rt));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&pRecord->reg_1_rt));
+    __asm volatile("stp x19, x20, [sp, 80]\n");
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+    
+    return pRecord->lr;// 把lr当作返回值，放进x0寄存器
 }
 
 //replacement objc_msgSend (arm64)
@@ -415,6 +445,8 @@ __asm volatile ("ldp x8, x9, [sp], #16\n"); \
 __asm volatile ("blr x12\n");
 
 // 保存函数入参(x0-x8)到栈内存，因为栈指针移动必须满足SP Mod 16 = 0的条件，而在x8寄存器只占用8个字节，剩余8个字节由 x9 来填充
+// !意思是执行加减操作
+// 数字在[]里面还是外面，表示立即执行加减操作，或者寄存器命令执行完再进行加减
 //ldr x0, [x1]; 将寄存器x1的值作为地址，取该内存地址的值放入寄存器x0中
 //ldr w8, [sp, #0x8]; 将栈内存[sp + 0x8]处的值读取到w8寄存器中
 //ldr x0, [x1, #4]!; 将寄存器x1的值加上4作为内存地址, 取该内存地址的值放入寄存器x0中，然后将寄存器x1的值加上4放入寄存器x1中
@@ -484,28 +516,6 @@ void smCallTraceStart() {
         }, 1);
     });
 }
-
-//void smCallConfigMinTime(uint64_t us) {
-//    _min_time_cost = us;
-//}
-//void smCallConfigMaxDepth(int depth) {
-//    _max_call_depth = depth;
-//}
-
-//smCallRecord *smGetCallRecords(int *num) {
-//    if (num) {
-//        *num = _smRecordNum;
-//    }
-//    return _smCallRecords;
-//}
-//
-//void smClearCallRecords() {
-//    if (_smCallRecords) {
-//        free(_smCallRecords);
-//        _smCallRecords = NULL;
-//    }
-//    _smRecordNum = 0;
-//}
 
 #else
 

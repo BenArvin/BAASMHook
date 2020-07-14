@@ -61,6 +61,10 @@
 - (void)testParamFunc:(NSInteger)intValue1 intValue2:(NSInteger)intValue2 intValue3:(NSInteger)intValue3 intValue4:(NSInteger)intValue4 intValue5:(NSInteger)intValue5 intValue6:(NSInteger)intValue6 intValue7:(NSInteger)intValue7 intValue8:(NSInteger)intValue8 intValue9:(NSInteger)intValue9 intValue10:(NSInteger)intValue10 {
 }
 
+- (int)testAdd:(int)base {
+    return base + 8;
+}
+
 @end
 
 @interface ViewController ()
@@ -76,6 +80,8 @@
     [sonSon testFunc];
 //    [sonSon testParamFunc:123 intValue2:234 intValue3:345 intValue4:456 intValue5:567 intValue6:678 intValue7:789 intValue8:1234 intValue9:2345 intValue10:3456];
     [sonSon testParamFunc:123456789];
+    int result = [sonSon testAdd:777770];
+    NSLog(@">>>>>>>>>>>>>  testAdd result=%d", result);
 }
 
 - (void)viewWillAppear:(BOOL)animated {
