@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E4E438DE24C9610C00612753 /* BAASMHook.m in Sources */ = {isa = PBXBuildFile; fileRef = E4E438DD24C9610C00612753 /* BAASMHook.m */; };
 		E4EEF2D624AF289700CBEEBD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2D524AF289700CBEEBD /* AppDelegate.m */; };
 		E4EEF2D924AF289700CBEEBD /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2D824AF289700CBEEBD /* SceneDelegate.m */; };
 		E4EEF2DC24AF289700CBEEBD /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2DB24AF289700CBEEBD /* ViewController.m */; };
@@ -16,7 +17,7 @@
 		E4EEF2E724AF289A00CBEEBD /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2E624AF289A00CBEEBD /* main.m */; };
 		E4EEF2F124AF289A00CBEEBD /* BAASMHookTests.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2F024AF289A00CBEEBD /* BAASMHookTests.m */; };
 		E4EEF2FC24AF289A00CBEEBD /* BAASMHookUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2FB24AF289A00CBEEBD /* BAASMHookUITests.m */; };
-		E4EEF30B24AF28EE00CBEEBD /* BAASMHook.c in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF30A24AF28EE00CBEEBD /* BAASMHook.c */; };
+		E4EEF30B24AF28EE00CBEEBD /* BAASMHookCore.c in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF30A24AF28EE00CBEEBD /* BAASMHookCore.c */; };
 		E4F0FD0F24B6C7DA00945ECB /* TestARM.c in Sources */ = {isa = PBXBuildFile; fileRef = E4F0FD0E24B6C7DA00945ECB /* TestARM.c */; };
 		E4F2480F24BDA32B00A5C569 /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = E4F2480E24BDA32B00A5C569 /* fishhook.c */; };
 /* End PBXBuildFile section */
@@ -39,6 +40,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E4E438DC24C9610C00612753 /* BAASMHook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BAASMHook.h; sourceTree = "<group>"; };
+		E4E438DD24C9610C00612753 /* BAASMHook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BAASMHook.m; sourceTree = "<group>"; };
 		E4EEF2D124AF289700CBEEBD /* BAASMHook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BAASMHook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4EEF2D424AF289700CBEEBD /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		E4EEF2D524AF289700CBEEBD /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -57,8 +60,8 @@
 		E4EEF2F724AF289A00CBEEBD /* BAASMHookUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BAASMHookUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4EEF2FB24AF289A00CBEEBD /* BAASMHookUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BAASMHookUITests.m; sourceTree = "<group>"; };
 		E4EEF2FD24AF289A00CBEEBD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		E4EEF30924AF28EE00CBEEBD /* BAASMHook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BAASMHook.h; sourceTree = "<group>"; };
-		E4EEF30A24AF28EE00CBEEBD /* BAASMHook.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BAASMHook.c; sourceTree = "<group>"; };
+		E4EEF30924AF28EE00CBEEBD /* BAASMHookCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BAASMHookCore.h; sourceTree = "<group>"; };
+		E4EEF30A24AF28EE00CBEEBD /* BAASMHookCore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BAASMHookCore.c; sourceTree = "<group>"; };
 		E4F0FD0E24B6C7DA00945ECB /* TestARM.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = TestARM.c; sourceTree = "<group>"; };
 		E4F0FD2624B753C600945ECB /* TestARM.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestARM.h; sourceTree = "<group>"; };
 		E4F2480D24BDA32B00A5C569 /* fishhook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
@@ -152,8 +155,10 @@
 		E4F2480B24BDA30700A5C569 /* BAASMHook */ = {
 			isa = PBXGroup;
 			children = (
-				E4EEF30924AF28EE00CBEEBD /* BAASMHook.h */,
-				E4EEF30A24AF28EE00CBEEBD /* BAASMHook.c */,
+				E4E438DC24C9610C00612753 /* BAASMHook.h */,
+				E4E438DD24C9610C00612753 /* BAASMHook.m */,
+				E4EEF30924AF28EE00CBEEBD /* BAASMHookCore.h */,
+				E4EEF30A24AF28EE00CBEEBD /* BAASMHookCore.c */,
 				E4F2480C24BDA31800A5C569 /* fishhook */,
 			);
 			path = BAASMHook;
@@ -301,10 +306,11 @@
 				E4F0FD0F24B6C7DA00945ECB /* TestARM.c in Sources */,
 				E4F2480F24BDA32B00A5C569 /* fishhook.c in Sources */,
 				E4EEF2DC24AF289700CBEEBD /* ViewController.m in Sources */,
+				E4E438DE24C9610C00612753 /* BAASMHook.m in Sources */,
 				E4EEF2D624AF289700CBEEBD /* AppDelegate.m in Sources */,
 				E4EEF2E724AF289A00CBEEBD /* main.m in Sources */,
 				E4EEF2D924AF289700CBEEBD /* SceneDelegate.m in Sources */,
-				E4EEF30B24AF28EE00CBEEBD /* BAASMHook.c in Sources */,
+				E4EEF30B24AF28EE00CBEEBD /* BAASMHookCore.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -2,13 +2,13 @@
 //  AppDelegate.m
 //  BAASMHook
 //
-//  Created by arvinnie on 2020/7/3.
+//  Created by BenArvin on 2020/7/3.
 //  Copyright © 2020 benarvin. All rights reserved.
 //
 
 #import "AppDelegate.h"
+//#import "TestARM.h"
 #import "BAASMHook.h"
-#import "TestARM.h"
 
 @interface AppDelegate ()
 
@@ -20,7 +20,7 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
 //    readStack();
-    startAsmHook();
+    [BAASMHook start];
     return YES;
 }
 

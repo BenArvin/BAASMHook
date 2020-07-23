@@ -1,12 +1,12 @@
 //
-//  BAASMHook.c
+//  BAASMHookCore.c
 //  BAASMHook
 //
 //  Created by BenArvin on 2020/07/14.
 //  Copyright © 2017年 BenArvin. All rights reserved.
 //
 
-#include "BAASMHook.h"
+#include "BAASMHookCore.h"
 #include <stdio.h>
 
 #ifdef __aarch64__
@@ -14,9 +14,17 @@
 #import "fishhook.h"
 #include <stdlib.h>
 #include <string.h>
-#include <objc/runtime.h>
 #include <dispatch/dispatch.h>
 #include <pthread.h>
+#include <objc/message.h>
+
+#pragma mark - defines
+
+static void(*_onBeforeCall)(Class, SEL);
+static void(*_onAfterCall)(Class, SEL);
+
+static pthread_mutex_t _hooking_lock;
+static BOOL _hooking = true;
 
 static pthread_key_t _thread_key;
 __unused static id (*orig_objc_msgSend)(id, SEL, ...);
@@ -46,6 +54,7 @@ typedef struct {
     int index;
 } thread_call_stack;
 
+#pragma mark - pthread stack methods
 static inline thread_call_stack * get_thread_call_stack() {
     thread_call_stack *cs = (thread_call_stack *)pthread_getspecific(_thread_key);
     if (cs == NULL) {
@@ -63,6 +72,58 @@ static void release_thread_call_stack(void *ptr) {
     if (!cs) return;
     if (cs->stack) free(cs->stack);
     free(cs);
+}
+
+#pragma mark - flag methods
+bool is_hooking() {
+    bool result = true;
+    pthread_mutex_lock(&_hooking_lock);
+    result = _hooking;
+    pthread_mutex_unlock(&_hooking_lock);
+    return result;
+}
+
+void set_hooking(bool newValue) {
+    pthread_mutex_lock(&_hooking_lock);
+    _hooking = newValue;
+    pthread_mutex_unlock(&_hooking_lock);
+}
+
+#pragma mark - business methods
+void before_call(thread_call_record *record) {
+    if (!is_hooking()) {
+        return;
+    }
+    const char *className = class_getName(record->cls);
+    if (strcmp(className, "BAASMHook") == 0) {
+        return;
+    }
+//    const char *cmdName = sel_getName(record->cmd);
+//    if (strcmp(cmdName, "testParamFunc:") == 0) {
+//        record->reg_2 = 987654321;
+//    } else if (strcmp(cmdName, "testAdd:") == 0) {
+//        record->reg_2 = 888880;
+//    }
+    if (_onBeforeCall) {
+        _onBeforeCall(record->cls, record->cmd);
+    }
+}
+
+void after_call(thread_call_record *record) {
+    if (!is_hooking()) {
+        return;
+    }
+    const char *className = class_getName(record->cls);
+    if (strcmp(className, "BAASMHook") == 0) {
+        return;
+    }
+//    const char *cmdName = sel_getName(record->cmd);
+//    if (strcmp(cmdName, "testAdd:") == 0) {
+//        record->reg_0_rt = 99999999;
+//    }
+    if (_onAfterCall) {
+        _onAfterCall(record->cls, record->cmd);
+    }
 }
 
 static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr, uint64_t reg_sp, int *index) {
@@ -111,12 +172,7 @@ void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
     thread_call_stack *cs = get_thread_call_stack();
     thread_call_record *record = &cs->stack[index];
     
-    const char *name = sel_getName(_cmd);
-    if (strcmp(name, "testParamFunc:") == 0) {
-        record->reg_2 = 987654321;
-    } else if (strcmp(name, "testAdd:") == 0) {
-        record->reg_2 = 888880;
-    }
+    before_call(record);
     
     uint64_t reg_tmp_19;
     uint64_t reg_tmp_20;
@@ -187,10 +243,7 @@ uintptr_t after_objc_msgSend() {
     __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
     __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
 
-    const char *name = sel_getName(pRecord->cmd);
-    if (strcmp(name, "testAdd:") == 0) {
-        pRecord->reg_0_rt = 99999999;
-    }
+    after_call(pRecord);
 
     __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
     __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
@@ -202,6 +255,8 @@ uintptr_t after_objc_msgSend() {
     
     return pRecord->lr;// 把lr当作返回值，放进x0寄存器
 }
+
+#pragma mark - hook methods
 
 //replacement objc_msgSend (arm64)
 // https://blog.nelhage.com/2010/10/amd64-and-va_arg/
@@ -293,14 +348,33 @@ static void baasm_objc_msgSend() {
 void startAsmHook() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
+        pthread_mutex_init(&_hooking_lock, NULL);
         pthread_key_create(&_thread_key, &release_thread_call_stack);
         rebind_symbols((struct rebinding[1]){{"objc_msgSend", baasm_objc_msgSend, (void *)&orig_objc_msgSend}}, 1);
     });
+    set_hooking(true);
+}
+
+void stopAsmHook() {
+    set_hooking(false);
+}
+
+void setCallback(void(*onBeforeCall)(Class, SEL), void(*onAfterCall)(Class, SEL)) {
+    _onBeforeCall = onBeforeCall;
+    _onAfterCall = onAfterCall;
 }
 
 #else
 
 void startAsmHook() {
+    printf("BAASMHook only support device environment!");
+}
+
+void stopAsmHook() {
+    printf("BAASMHook only support device environment!");
+}
+
+void setCallback(void(*onBeforeCall)(Class, SEL), void(*onAfterCall)(Class, SEL)) {
     printf("BAASMHook only support device environment!");
 }
 
