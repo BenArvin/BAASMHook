@@ -9,6 +9,8 @@
 #import "BAASMHook.h"
 #import "BAASMHookCore.h"
 
+static Class kBAASMHookExceptionClassOSObject;
+
 @interface BAASMHook() {
 }
 
@@ -19,19 +21,25 @@
 @end
 
 void _onBeforeCall(Class cls, SEL sel) {
-//    printf(">>>>>>>>>>>>>>>>>>>  _onBeforeCall\n");
-//    printf(class_getName(cls));
-//    printf("\n");
-//    printf(sel_getName(sel));
-//    [[BAASMHook shared] onBeforeCall:cls sel:sel];
+    if ([cls isSubclassOfClass:kBAASMHookExceptionClassOSObject]) {
+        return;
+    }
+    printf(">>>>>>>>>>>>>>>>>>>  _onBeforeCall\n");
+    printf(class_getName(cls));
+    printf("\n");
+    printf(sel_getName(sel));
+    [[BAASMHook shared] onBeforeCall:cls sel:sel];
 }
 
 void _onAfterCall(Class cls, SEL sel) {
-//    printf(">>>>>>>>>>>>>>>>>>>  _onAfterCall\n");
-//    printf(class_getName(cls));
-//    printf("\n");
-//    printf(sel_getName(sel));
-//    [[BAASMHook shared] onAfterCall:cls sel:sel];
+    if ([cls isSubclassOfClass:kBAASMHookExceptionClassOSObject]) {
+        return;
+    }
+    printf(">>>>>>>>>>>>>>>>>>>  _onAfterCall\n");
+    printf(class_getName(cls));
+    printf("\n");
+    printf(sel_getName(sel));
+    [[BAASMHook shared] onAfterCall:cls sel:sel];
 }
 
 @implementation BAASMHook
@@ -40,6 +48,8 @@ void _onAfterCall(Class cls, SEL sel) {
     static dispatch_once_t onceToken;
     static BAASMHook *_shared;
     dispatch_once(&onceToken, ^{
+        kBAASMHookExceptionClassOSObject = NSClassFromString(@"OS_object");
+        
         _shared = [[BAASMHook alloc] init];
     });
     return _shared;
@@ -80,11 +90,11 @@ void _onAfterCall(Class cls, SEL sel) {
 }
 
 - (void)onBeforeCall:(Class)cls sel:(SEL)sel {
-    NSLog(@"-------  onBeforeCall");
+//    NSLog(@"-------  onBeforeCall");
 }
 
 - (void)onAfterCall:(Class)cls sel:(SEL)sel {
-    NSLog(@"-------  onAfterCall");
+//    NSLog(@"-------  onAfterCall");
 }
 
 @end

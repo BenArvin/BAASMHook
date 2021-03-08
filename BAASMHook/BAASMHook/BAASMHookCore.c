@@ -101,12 +101,12 @@ void before_call(thread_call_record *record) {
 //    const char *cmdName = sel_getName(record->cmd);
 //    if (strcmp(cmdName, "testParamFunc:") == 0) {
 //        record->reg_2 = 987654321;
-//    } else if (strcmp(cmdName, "testAdd:") == 0) {
-//        record->reg_2 = 888880;
+//    } else if (strcmp(cmdName, "add:num2:") == 0) {
+//        record->reg_2 = 3;
 //    }
-    if (_onBeforeCall) {
-        _onBeforeCall(record->cls, record->cmd);
-    }
+//    if (_onBeforeCall) {
+//        _onBeforeCall(record->cls, record->cmd);
+//    }
 }
 
 void after_call(thread_call_record *record) {
@@ -117,13 +117,13 @@ void after_call(thread_call_record *record) {
     if (strcmp(className, "BAASMHook") == 0) {
         return;
     }
-//    const char *cmdName = sel_getName(record->cmd);
-//    if (strcmp(cmdName, "testAdd:") == 0) {
-//        record->reg_0_rt = 99999999;
-//    }
-    if (_onAfterCall) {
-        _onAfterCall(record->cls, record->cmd);
+    const char *cmdName = sel_getName(record->cmd);
+    if (strcmp(cmdName, "add:num2:") == 0) {
+        record->reg_0_rt = 4;
     }
+//    if (_onAfterCall) {
+//        _onAfterCall(record->cls, record->cmd);
+//    }
 }
 
 static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr, uint64_t reg_sp, int *index) {
