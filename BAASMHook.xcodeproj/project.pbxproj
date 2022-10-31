@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A8A137A290FA70600D102FC /* TestClasses.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A8A1379290FA70600D102FC /* TestClasses.m */; };
 		E4E438DE24C9610C00612753 /* BAASMHook.m in Sources */ = {isa = PBXBuildFile; fileRef = E4E438DD24C9610C00612753 /* BAASMHook.m */; };
 		E4EEF2D624AF289700CBEEBD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2D524AF289700CBEEBD /* AppDelegate.m */; };
 		E4EEF2DC24AF289700CBEEBD /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E4EEF2DB24AF289700CBEEBD /* ViewController.m */; };
@@ -37,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9A8A1378290FA70600D102FC /* TestClasses.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestClasses.h; sourceTree = "<group>"; };
+		9A8A1379290FA70600D102FC /* TestClasses.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestClasses.m; sourceTree = "<group>"; };
 		E4E438DC24C9610C00612753 /* BAASMHook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BAASMHook.h; sourceTree = "<group>"; };
 		E4E438DD24C9610C00612753 /* BAASMHook.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BAASMHook.m; sourceTree = "<group>"; };
 		E4EEF2D124AF289700CBEEBD /* BAASMHook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BAASMHook.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +115,8 @@
 				E4F2480B24BDA30700A5C569 /* BAASMHook */,
 				E4EEF2D424AF289700CBEEBD /* AppDelegate.h */,
 				E4EEF2D524AF289700CBEEBD /* AppDelegate.m */,
+				9A8A1378290FA70600D102FC /* TestClasses.h */,
+				9A8A1379290FA70600D102FC /* TestClasses.m */,
 				E4EEF2DA24AF289700CBEEBD /* ViewController.h */,
 				E4EEF2DB24AF289700CBEEBD /* ViewController.m */,
 				E4F0FD2624B753C600945ECB /* TestARM.h */,
@@ -296,6 +301,7 @@
 				E4E438DE24C9610C00612753 /* BAASMHook.m in Sources */,
 				E4EEF2D624AF289700CBEEBD /* AppDelegate.m in Sources */,
 				E4EEF2E724AF289A00CBEEBD /* main.m in Sources */,
+				9A8A137A290FA70600D102FC /* TestClasses.m in Sources */,
 				E4EEF30B24AF28EE00CBEEBD /* BAASMHookCore.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -449,6 +455,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 33783BJMWK;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 33783BJMWK;
 				INFOPLIST_FILE = BAASMHook/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -458,6 +465,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.benarvin.BAASMHook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = all;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = all_iOS_dev;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -469,6 +477,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 33783BJMWK;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 33783BJMWK;
 				INFOPLIST_FILE = BAASMHook/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -478,6 +487,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.benarvin.BAASMHook;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = all;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = all_iOS_dev;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

@@ -10,6 +10,7 @@
 //#import "TestARM.h"
 #import "BAASMHook.h"
 #import "ViewController.h"
+#import "TestClasses.h"
 
 @interface AppDelegate ()
 
@@ -20,14 +21,17 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    
+    //    readStack();
+    
+    [BAASMHook start];
     ViewController *rootVC = [[ViewController alloc] init];
     self.rootNav = [[UINavigationController alloc] initWithRootViewController:rootVC];
     self.window = [[UIWindow alloc] init];
     self.window.rootViewController = self.rootNav;
     [self.window makeKeyAndVisible];
     
-//    readStack();
-    [BAASMHook start];
+    [TestClasses startTest];
     return YES;
 }
 

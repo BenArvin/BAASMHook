@@ -8,4 +8,4 @@
 
 #include <stdio.h>
 
-extern void readStack();
+extern void readStack(void);

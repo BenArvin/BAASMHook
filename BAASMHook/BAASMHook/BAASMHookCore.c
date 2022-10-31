@@ -75,7 +75,7 @@ static void release_thread_call_stack(void *ptr) {
 }
 
 #pragma mark - flag methods
-bool is_hooking() {
+bool is_hooking(void) {
     bool result = true;
     pthread_mutex_lock(&_hooking_lock);
     result = _hooking;
@@ -118,12 +118,13 @@ void after_call(thread_call_record *record) {
         return;
     }
     const char *cmdName = sel_getName(record->cmd);
-    if (strcmp(cmdName, "add:num2:") == 0) {
-        record->reg_0_rt = 4;
-    }
-//    if (_onAfterCall) {
-//        _onAfterCall(record->cls, record->cmd);
+//    if (strcmp(cmdName, "add:num2:") == 0) {
+//        record->reg_0_rt = 4;
 //    }
+    if (_onAfterCall) {
+        _onAfterCall(record->cls, record->cmd);
+    }
+    
 }
 
 static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr, uint64_t reg_sp, int *index) {
@@ -212,7 +213,7 @@ void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
     __asm volatile("ldr x19, [%0]\n" :: "r"(&reg19));
     
     //sp相差160，除去主动入栈的10个寄存器，剩下的就是函数调用时入栈的
-    //PC、LR、SP、FP，加上自身参数3个self、_cmd、lr，两个内部变量reg_sp、reg19，共10个寄存器
+    //PC、LR、SP、FP，加上自身参数self、cls、_cmd、lr，两个内部变量reg_sp、reg19，共10个寄存器
     reg_sp = reg_sp + 80;
     
     int index;
@@ -220,38 +221,35 @@ void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
     reset_params(_cmd, index, reg_sp);
 }
 
-uintptr_t after_objc_msgSend() {
-    uint64_t reg_sp;
-    uint64_t reg19;
-    __asm volatile("str x19, [%0]\n" :: "r"(&reg19));
-    __asm volatile("mov x19, sp");
-    __asm volatile("str x19, [%0]\n" :: "r"(&reg_sp));
-    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg19));
-    reg_sp = reg_sp + 80;
+uintptr_t after_objc_msgSend(void) {
+    //获取之前保存的x0和x1寄存器的值
+    uint64_t reg_tmp_0;
+    uint64_t reg_tmp_1;
+    uint64_t reg_tmp_19;
+    uint64_t reg_tmp_20;
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19)); //将x19寄存器的值存入reg19中
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20)); //将x20寄存器的值存入reg19中
+    __asm volatile("ldp x19, x20, [sp, 96]\n"); //出栈，sp偏移为112，是因为方法跳转需要固定压栈8个寄存器即大小64，本方法内有6个局部变量即再加上大小48
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_0)); //将x19寄存器值位置的数据，也就是之前保存的x0的值，读取到reg_tmp_0中
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_1)); //将x20寄存器值位置的数据，也就是之前保存的x1的值，读取到reg_tmp_1中
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19)); //将存储器地址为reg19的字数据，读入寄存器x19，也就是恢复x19寄存器
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20)); //将存储器地址为reg20的字数据，读入寄存器x20，也就是恢复x20寄存器
     
     thread_call_stack *cs = get_thread_call_stack();
     int nextIndex = cs->index--;
     thread_call_record *pRecord = &cs->stack[nextIndex];
-    
-    uint64_t reg_tmp_19;
-    uint64_t reg_tmp_20;
-    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
-    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
-    __asm volatile("ldp x19, x20, [sp, 80]\n");
-    __asm volatile("str x19, [%0]\n" :: "r"(&pRecord->reg_0_rt));
-    __asm volatile("str x20, [%0]\n" :: "r"(&pRecord->reg_1_rt));
-    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
-    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+    pRecord->reg_0_rt = reg_tmp_0;
+    pRecord->reg_1_rt = reg_tmp_1;
 
     after_call(pRecord);
 
-    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
-    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20));
-    __asm volatile("ldr x19, [%0]\n" :: "r"(&pRecord->reg_0_rt));
-    __asm volatile("ldr x20, [%0]\n" :: "r"(&pRecord->reg_1_rt));
-    __asm volatile("stp x19, x20, [sp, 80]\n");
-    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19));
-    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20));
+    __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19)); //将x19寄存器的值存入reg19中
+    __asm volatile("str x20, [%0]\n" :: "r"(&reg_tmp_20)); //将x20寄存器的值存入reg19中
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&pRecord->reg_0_rt)); //将存储器地址为reg_0_rt的字数据，读入寄存器x19
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&pRecord->reg_1_rt)); //将存储器地址为reg_1_rt的字数据，读入寄存器x20
+    __asm volatile("stp x19, x20, [sp, 96]\n"); //入栈，即复写x0和x1
+    __asm volatile("ldr x19, [%0]\n" :: "r"(&reg_tmp_19)); //将存储器地址为reg19的字数据，读入寄存器x19，也就是恢复x19寄存器
+    __asm volatile("ldr x20, [%0]\n" :: "r"(&reg_tmp_20)); //将存储器地址为reg20的字数据，读入寄存器x20，也就是恢复x20寄存器
     
     return pRecord->lr;// 把lr当作返回值，放进x0寄存器
 }
@@ -350,7 +348,10 @@ void startAsmHook() {
     dispatch_once(&onceToken, ^{
         pthread_mutex_init(&_hooking_lock, NULL);
         pthread_key_create(&_thread_key, &release_thread_call_stack);
-        rebind_symbols((struct rebinding[1]){{"objc_msgSend", baasm_objc_msgSend, (void *)&orig_objc_msgSend}}, 1);
+        struct rebinding bds[1] = {
+            {"objc_msgSend", baasm_objc_msgSend, (void *)&orig_objc_msgSend}
+        };
+        rebind_symbols(bds, 1);
     });
     set_hooking(true);
 }

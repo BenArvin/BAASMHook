@@ -17,7 +17,7 @@
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
 
-void readStack() {
+void readStack(void) {
     uint64_t value1;
     uint64_t value2;
     uint64_t reg10;
