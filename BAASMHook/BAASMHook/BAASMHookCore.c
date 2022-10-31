@@ -49,6 +49,13 @@ typedef struct {
 } thread_call_record;
 
 typedef struct {
+    id self; //通过 object_getClass 能够得到 Class 再通过 NSStringFromClass 能够得到类名
+    Class cls;
+    SEL cmd; //通过 NSStringFromSelector 方法能够得到方法名
+    uintptr_t lr; // link register
+} thread_call_record2;
+
+typedef struct {
     thread_call_record *stack;
     int allocated_length;
     int index;
@@ -58,6 +65,7 @@ typedef struct {
 static inline thread_call_stack * get_thread_call_stack() {
     thread_call_stack *cs = (thread_call_stack *)pthread_getspecific(_thread_key);
     if (cs == NULL) {
+        // 初始化cs，默认stack初始化128个record大小的空间，并将指针指向第一个
         cs = (thread_call_stack *)malloc(sizeof(thread_call_stack));
         cs->stack = (thread_call_record *)calloc(128, sizeof(thread_call_record));
         cs->allocated_length = 64;
@@ -132,6 +140,7 @@ static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr
     if (cs) {
         int nextIndex = (++cs->index);
         if (nextIndex >= cs->allocated_length) {
+            // 如果分配的空间已经用完了，就为stack重新分配空间，再增加64个length * record的大小
             cs->allocated_length += 64;
             cs->stack = (thread_call_record *)realloc(cs->stack, cs->allocated_length * sizeof(thread_call_record));
         }
@@ -142,6 +151,7 @@ static inline void push_call_record(id _self, Class _cls, SEL _cmd, uintptr_t lr
         newRecord->cmd = _cmd;
         newRecord->lr = lr;
         
+        //使用x19和x20作为中转，将栈中保存的x0-x9共十个寄存器的值，取出放进结构体中，最后再恢复x19和x20
         uint64_t reg_tmp_19;
         uint64_t reg_tmp_20;
 
@@ -175,6 +185,7 @@ void reset_params(SEL _cmd, int index, uint64_t reg_sp) {
     
     before_call(record);
     
+    //使用x19和x20作为中转，将结构体中保存的x0-x9共十个寄存器的值，取出放进栈中复写之前保存的值，等待后面出栈的时候达到修改传参的效果
     uint64_t reg_tmp_19;
     uint64_t reg_tmp_20;
     __asm volatile("str x19, [%0]\n" :: "r"(&reg_tmp_19));
