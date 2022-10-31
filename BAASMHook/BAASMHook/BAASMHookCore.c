@@ -213,7 +213,7 @@ void before_objc_msgSend(id self, SEL _cmd, uintptr_t lr) {
     __asm volatile("ldr x19, [%0]\n" :: "r"(&reg19));
     
     //sp相差160，除去主动入栈的10个寄存器，剩下的就是函数调用时入栈的
-    //PC、LR、SP、FP，加上自身参数self、cls、_cmd、lr，两个内部变量reg_sp、reg19，共10个寄存器
+    //PC、LR、SP、FP，加上自身参数self、_cmd、lr，内部变量reg_sp、reg19、index，共10个寄存器
     reg_sp = reg_sp + 80;
     
     int index;
